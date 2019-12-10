@@ -12,15 +12,33 @@
 
   - name: RHEL 7 Tasks
     block:
+    - name: Install GUI components (cloud access)
+      yum:
+        name:
+        - "@gnome-desktop"
+        - "@x11"
+        - "@fonts"
+        - "tigervnc-server"
+        exclude: "fwupdate-efi"
+        disablerepo: "*"
+        enablerepo: "rhui-REGION-rhel-server-releases"
+        skip_broken: "yes"
+        state: present
+      when: cloud_access
+
     - name: Install GUI components
       yum:
         name:
         - "@gnome-desktop"
         - "@x11"
         - "@fonts"
+        - "tigervnc-server"
         exclude: "fwupdate-efi"
+#        disablerepo: "*"
+#        enablerepo: "rhel-7-server-rpms"
         skip_broken: "yes"
         state: present
+      when: not cloud_access
   
     - name: Install XRDP server and dependencies
       yum:
@@ -28,8 +46,9 @@
         - "xrdp"
         - "xrdp-selinux"
         - "xorgxrdp"
-        - "tigervnc-server"
-        state: latest
+#        disablerepo: "*"
+#        enablerepo: "epel"
+        state: present
 
     when: ansible_distribution == 'RedHat' and ansible_distribution_major_version == '7'
 
@@ -40,103 +59,115 @@
       yum:
         name:
         - "@graphical-server-environment"
-        - git
-        - openssl-devel
-        - pam-devel
-        - libX11-devel
-        - libXfixes-devel
-        - libXrandr-devel
-        - gcc
-        - clang
-        - make
-        - automake
-        - libtool
-        - pkgconfig
+#        - git
+#        - openssl-devel
+#        - pam-devel
+#        - libX11-devel
+#        - libXfixes-devel
+#        - libXrandr-devel
+#        - gcc
+#        - clang
+#        - make
+#        - automake
+#        - libtool
+#        - pkgconfig
         - tigervnc-server
         - "xorg*"
         - coreutils
         - wget
-        exclude: "fwupdate-efi"
+        exclude:
+        - fwupdate-efi
+        - file-roller-nautilus
         skip_broken: "yes"
         state: present
-
-    - name: Install build tools and headers
+  
+    - name: Install XRDP server and dependencies
       yum:
-#        name: https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/linux/nasm-2.14.02-0.fc27.x86_64.rpm
         name:
-        - nasm
-        - xorg-x11-server-devel
-        enablerepo: codeready-builder-for-rhel-8-x86_64-rpms
+        - "xrdp"
+        - "xrdp-selinux"
+        - "xorgxrdp"
+#        disablerepo: "*"
+#        enablerepo: "epel"
+        state: present
 
-    - name: Create build directory
-      file:
-        path: "/home/ec2-user/src"
-        state: directory
-      become: false
+# Commented out due to the addition of Xrdp/xorgxdp to EPEL 8
+#    - name: Install build tools and headers
+#      yum:
+#        name:
+#        - nasm
+#        - xorg-x11-server-devel
+#        enablerepo: codeready-builder-for-rhel-8-x86_64-rpms
 
-    - name: Clone xrdp repo
-      git:
-        repo: "https://github.com/neutrinolabs/xrdp"
-        dest: "/home/ec2-user/src/xrdp"
-        recursive: true
-      become: false
+#    - name: Create build directory
+#      file:
+#        path: "/home/ec2-user/src"
+#        state: directory
+#      become: false
 
-    - name: Bootstrap xrdp
-      command: "./bootstrap"
-      args:
-        chdir: "/home/ec2-user/src/xrdp"
-        creates: "/home/ec2-user/src/xrdp/depcomp"
-      become: false
+#    - name: Clone xrdp repo
+#      git:
+#        repo: "https://github.com/neutrinolabs/xrdp"
+#        dest: "/home/ec2-user/src/xrdp"
+#        recursive: true
+#      become: false
 
-    - name: Configure xrdp
-      command: "./configure"
-      args:
-        chdir: "/home/ec2-user/src/xrdp"
-        creates: "/home/ec2-user/src/xrdp/Makefile"
-      become: false
+#    - name: Bootstrap xrdp
+#      command: "./bootstrap"
+#      args:
+#        chdir: "/home/ec2-user/src/xrdp"
+#        creates: "/home/ec2-user/src/xrdp/depcomp"
+#      become: false
 
-    - name: Make xrdp
-      make:
-        chdir: "/home/ec2-user/src/xrdp"
-        target: "all"
-      become: false
+#    - name: Configure xrdp
+#      command: "./configure"
+#      args:
+#        chdir: "/home/ec2-user/src/xrdp"
+#        creates: "/home/ec2-user/src/xrdp/Makefile"
+#      become: false
 
-    - name: Make install xrdp
-      make:
-        chdir: "/home/ec2-user/src/xrdp"
-        target: "install"
+#    - name: Make xrdp
+#      make:
+#        chdir: "/home/ec2-user/src/xrdp"
+#        target: "all"
+#      become: false
 
-    - name: Clone xorgxrdp repo
-      git:
-        repo: "https://github.com/neutrinolabs/xorgxrdp"
-        dest: "/home/ec2-user/src/xorgxrdp"
-        recursive: true
-      become: false
+#    - name: Make install xrdp
+#      make:
+#        chdir: "/home/ec2-user/src/xrdp"
+#        target: "install"
 
-    - name: Bootstrap xorgxrdp
-      command: "./bootstrap"
-      args:
-        chdir: "/home/ec2-user/src/xorgxrdp"
-        creates: "/home/ec2-user/src/xorgxrdp/depcomp"
-      become: false
+#    - name: Clone xorgxrdp repo
+#      git:
+#        repo: "https://github.com/neutrinolabs/xorgxrdp"
+#        dest: "/home/ec2-user/src/xorgxrdp"
+#        recursive: true
+#      become: false
 
-    - name: Configure xorgxrdp
-      command: "./configure PKG_CONFIG_PATH=/usr/local/lib/pkgconfig"
-      args:
-        chdir: "/home/ec2-user/src/xorgxrdp"
-        creates: "/home/ec2-user/src/xorgxrdp/Makefile"
-      become: false
+#    - name: Bootstrap xorgxrdp
+#      command: "./bootstrap"
+#      args:
+#        chdir: "/home/ec2-user/src/xorgxrdp"
+#        creates: "/home/ec2-user/src/xorgxrdp/depcomp"
+#      become: false
 
-    - name: Make xorgxrdp
-      make:
-        chdir: "/home/ec2-user/src/xorgxrdp"
-        target: "all"
-      become: false
+#    - name: Configure xorgxrdp
+#      command: "./configure PKG_CONFIG_PATH=/usr/local/lib/pkgconfig"
+#      args:
+#        chdir: "/home/ec2-user/src/xorgxrdp"
+#        creates: "/home/ec2-user/src/xorgxrdp/Makefile"
+#      become: false
 
-    - name: Make install xorgxrdp
-      make:
-        chdir: "/home/ec2-user/src/xorgxrdp"
-        target: "install"
+#    - name: Make xorgxrdp
+#      make:
+#        chdir: "/home/ec2-user/src/xorgxrdp"
+#        target: "all"
+#      become: false
+
+#    - name: Make install xorgxrdp
+#      make:
+#        chdir: "/home/ec2-user/src/xorgxrdp"
+#        target: "install"
 
     - name: Install Xwrapper configuration
       copy:
@@ -184,14 +215,6 @@
     command: semodule -i colord-add.pp chdir=/home/{{ system_user }}/.selinux
     notify: colord
     when: result.changed
-
-#  - name: Configure XRDP for SELinux
-#    file:
-#      path: "{{ item }}"
-#      setype: "bin_t"
-#    with_items:
-#    - "/usr/sbin/xrdp"
-#    - "/usr/sbin/xrdp-sesman"
 
   - when: ansible_facts.packages["firewalld"] is defined
     block:
