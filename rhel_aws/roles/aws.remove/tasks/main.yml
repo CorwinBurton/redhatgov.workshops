@@ -115,7 +115,7 @@
   ec2_vpc_subnet_facts:
     region: "{{ region }}"
     filters:
-      tag:workshop: "dp"
+      tag:workshop: "{{ workshop }}"
       tag:workshop_prefix: "{{ workshop_prefix }}"
   register: ec2_subnet
 
@@ -128,7 +128,7 @@
   ec2_vpc_route_table_facts:
     region: "{{ region }}"
     filters:
-      tag:workshop: "dp"
+      tag:workshop: "{{ workshop }}"
       tag:workshop_prefix: "{{ workshop_prefix }}"
   register: ec2_route
 
@@ -141,7 +141,7 @@
   ec2_vpc_net_facts:
     region: "{{ region }}"
     filters:
-      tag:workshop: "dp"
+      tag:workshop: "{{ workshop }}"
       tag:workshop_prefix: "{{ workshop_prefix }}"
   register: ec2_vpc
 
@@ -308,6 +308,13 @@
   ec2_vpc_subnet:
     region: "{{ region }}"
     cidr: "10.0.2.0/24"
+    vpc_id: "{{ vpc_id }}"
+    state: absent
+
+- name: Delete private subnet
+  ec2_vpc_subnet:
+    region: "{{ region }}"
+    cidr: "10.0.3.0/24"
     vpc_id: "{{ vpc_id }}"
     state: absent
 
